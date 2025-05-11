@@ -12,7 +12,7 @@ M.setup = function(args)
 	M.config = vim.tbl_deep_extend("force", M.config, args or {})
 end
 
-local providers = { "ollama", "openai" }
+local providers = { "ollama", "openai", "wca" }
 
 ---@param opts { visual_mode: boolean }
 ---@see file plugin/init.lua
