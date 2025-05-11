@@ -12,14 +12,16 @@ M.setup = function(args)
 	M.config = vim.tbl_deep_extend("force", M.config, args or {})
 end
 
+local providers = { "ollama", "openai" }
+
 ---@param opts { visual_mode: boolean }
 ---@see file plugin/init.lua
 M.code = function(opts)
 	if opts.visual_mode then
 		local selection = util.get_visual_selection()
-		code_window.build_and_mount(selection)
+		code_window.build_and_mount(providers, selection)
 	else
-		code_window.build_and_mount()
+		code_window.build_and_mount(providers)
 	end
 end
 
@@ -28,9 +30,9 @@ end
 M.chat = function(opts)
 	if opts.visual_mode then
 		local selection = util.get_visual_selection()
-		chat_window.build_and_mount(selection)
+		chat_window.build_and_mount(providers, selection)
 	else
-		chat_window.build_and_mount()
+		chat_window.build_and_mount(providers)
 	end
 end
 

@@ -1,8 +1,6 @@
 local Store = require("gptmodels.store")
 local cmd = require("gptmodels.cmd")
 local util = require("gptmodels.util")
-local ollama = require("gptmodels.providers.ollama")
-local openai = require("gptmodels.providers.openai")
 
 local M = {}
 
@@ -87,6 +85,7 @@ end
 
 -- Check for required programs, warn user if they're not there
 -- *NOTE*: the keys in the returned table must be one of vim.log.levels
+-- TODO remove hard-coded values
 ---@return { INFO: string | nil, ERROR: string | nil }
 function M.check_deps()
 	local has_curl = true
@@ -213,7 +212,7 @@ end
 
 -- Triggers the fetching / saving of available models from the ollama and openai servers
 ---@param on_complete fun(): nil
-M.trigger_models_etl = function(on_complete)
+M.trigger_models_etl = function(providers, on_complete)
 	---@param err string | nil
 	---@param models string[] | nil
 	---@param provider Provider
@@ -237,17 +236,14 @@ M.trigger_models_etl = function(on_complete)
 		on_complete()
 	end
 
-	-- Fetch models from ollama server
-	ollama.fetch_models(function(err, ollama_models)
-		handle_models_fetch(err, ollama_models, "ollama")
-	end)
-
-	-- Fetch models from openai server
-	---@param err string
-	---@param openai_models string[]
-	openai.fetch_models(function(err, openai_models)
-		handle_models_fetch(err, openai_models, "openai")
-	end)
+	for _, provider_name in ipairs(providers) do
+		-- Fetch models from openai server
+		---@param err string
+		---@param models string[]
+		require("gptmodels.providers." .. provider_name).fetch_models(function(err, models)
+			handle_models_fetch(err, models, provider_name)
+		end)
+	end
 end
 
 -- Generates a function that abstracts the telescope stuff, w/ a simpler api

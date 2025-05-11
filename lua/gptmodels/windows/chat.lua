@@ -114,9 +114,10 @@ local on_CR = function(input_bufnr, chat_bufnr)
 	Store:register_job(job)
 end
 
+---@param providers string[]
 ---@param selection Selection | nil
 ---@return { input: NuiPopup, chat: NuiPopup }
-function M.build_and_mount(selection)
+function M.build_and_mount(providers, selection)
 	---@type NuiPopup
 	local chat = Popup(com.build_common_popup_opts(WINDOW_TITLE_PREFIX .. com.model_display_name()))
 	---@type NuiPopup
@@ -130,7 +131,7 @@ function M.build_and_mount(selection)
 	Store.chat.input.popup = input
 
 	-- Fetch all models so user can work with what they have on their system
-	com.trigger_models_etl(function()
+	com.trigger_models_etl(providers, function()
 		local has_buf_and_win = chat.bufnr and chat.winid
 		if not has_buf_and_win then
 			return

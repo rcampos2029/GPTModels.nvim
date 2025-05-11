@@ -157,9 +157,10 @@ local on_CR = function(input_bufnr, left_bufnr, right_bufnr)
 	Store:register_job(job)
 end
 
+---@param providers string[]
 ---@param selection Selection | nil
 ---@return { input: NuiPopup, right: NuiPopup, left: NuiPopup }
-function M.build_and_mount(selection)
+function M.build_and_mount(providers, selection)
 	---@type NuiPopup
 	local left = Popup(com.build_common_popup_opts("On Deck"))
 	---@type NuiPopup
@@ -175,7 +176,7 @@ function M.build_and_mount(selection)
 	Store.code.input.popup = input
 
 	-- Fetch all models so user can work with what they have on their system
-	com.trigger_models_etl(function()
+	com.trigger_models_etl(providers, function()
 		local has_buf_and_win = right.bufnr and right.winid
 		if not has_buf_and_win then
 			return

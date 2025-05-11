@@ -82,10 +82,10 @@ end
 ---@class ChatWindow : Window
 ---@field chat MessagePane
 
----@alias Provider "openai" | "ollama"
+---@alias Provider string
 
 ---@class Store
----@field private _llm_models { openai: string[], ollama: string[] }
+---@field private _llm_models {}
 ---@field private _llm_provider string
 ---@field private _llm_model string
 ---@field private _job Job | nil
@@ -123,10 +123,7 @@ end
 
 ---@type Store
 local Store = {
-	_llm_models = {
-		openai = {},
-		ollama = {},
-	},
+	_llm_models = {},
 
 	_llm_provider = "",
 	_llm_model = "",
@@ -191,18 +188,13 @@ local Store = {
 		local current_model = current_model_info.model
 
 		-- Define available models as a table with providers and their corresponding models
-		local available_models = {
-			ollama = self:get_models("ollama"),
-			openai = self:get_models("openai"),
-		}
-
-		-- TODO Handle the case where available_models might be empty
-		if not available_models.ollama and not available_models.openai then
-			return
+		local available_models = {}
+		for provider, _ in pairs(self._llm_models) do
+			available_models[provider] = self._llm_models[provider]
 		end
 
 		-- Check if the current model is still present in the available models list
-		for _, provider in ipairs({ "ollama", "openai" }) do
+		for provider, _ in pairs(self._llm_models) do
 			for _, available_model in ipairs(available_models[provider]) do
 				if available_model == current_model then
 					-- The currently selected model is present in our lists, no work need be done.
@@ -211,21 +203,8 @@ local Store = {
 			end
 		end
 
-		-- Current model is not available; select a default model
-		local preferred_defaults = { "llama3.1:latest", "deepseek-v2:latest", "gpt-4o-mini", "gpt-4o" }
-		for _, preferred_default in ipairs(preferred_defaults) do
-			for _, provider in ipairs({ "ollama", "openai" }) do
-				for _, available_model in ipairs(available_models[provider]) do
-					if available_model == preferred_default then
-						self:set_model(provider, preferred_default)
-						return
-					end
-				end
-			end
-		end
-
 		-- If no preferred defaults are available, user gets the first available one
-		for _, provider in ipairs({ "ollama", "openai" }) do
+		for provider, _ in pairs(self._llm_models) do
 			if #available_models[provider] > 0 then
 				-- Set the model to the first available option from the corresponding provider
 				self:set_model(provider, available_models[provider][1])
@@ -234,15 +213,13 @@ local Store = {
 		end
 
 		-- If we reach this point, it means there are no available models. Plugin is useless.
-		-- TODO Need to handle this though with some user feedback
+		vim.notify("No models available", vim.log.levels.ERROR)
 	end,
 
 	clear = function(self)
 		self.code:clear()
 		self.chat:clear()
-		self:set_models("ollama", {})
-		self:set_models("openai", {})
-		-- TODO Need to clear default model as well?
+		self._llm_models = {}
 	end,
 
 	code = {
