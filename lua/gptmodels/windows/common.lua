@@ -84,7 +84,7 @@ function M.safe_render_buffer_from_lines(bufnr, lines)
 end
 
 -- Check for required programs, warn user if they're not there
-function M.check_deps(providers)
+function M.check_deps(providers, hide_warnings)
     local has_curl = true
     cmd.exec({
         sync = true,
@@ -105,7 +105,7 @@ function M.check_deps(providers)
 
     for _, provider_name in ipairs(providers) do
         for level, message in pairs(require("gptmodels.providers." .. provider_name).check_deps() or {}) do
-		if #message > 0 then
+		if #message > 0 and not hide_warnings then
 			vim.notify_once(message, vim.log.levels[level])
 		end
         end

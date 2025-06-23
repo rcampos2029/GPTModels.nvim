@@ -413,9 +413,6 @@ function M.build_and_mount(providers, selection)
 	vim.wo[right.winid].wrap = true
 	vim.wo[input.winid].wrap = true
 
-	-- Notify of any errors / warnings
-    com.check_deps(providers)
-
 	return {
 		input = input,
 		right = right,

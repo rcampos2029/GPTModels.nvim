@@ -1,4 +1,5 @@
 local util = require("gptmodels.util")
+local com = require("gptmodels.windows.common")
 local code_window = require("gptmodels.windows.code")
 local chat_window = require("gptmodels.windows.chat")
 
@@ -16,9 +17,11 @@ end
 
 local providers = { "ollama", "openai", "wca", anthropic.name }
 
----@param opts { visual_mode: boolean }
+---@param opts { visual_mode: boolean, hide_warnings: boolean }
 ---@see file plugin/init.lua
 M.code = function(opts)
+	-- Notify of any errors / warnings
+    com.check_deps(providers, opts.hide_warnings)
 	if opts.visual_mode then
 		local selection = util.get_visual_selection()
 		code_window.build_and_mount(providers, selection)
@@ -27,9 +30,11 @@ M.code = function(opts)
 	end
 end
 
----@param opts { visual_mode: boolean }
+---@param opts { visual_mode: boolean, hide_warnings: boolean }
 ---@see file plugin/init.lua
 M.chat = function(opts)
+	-- Notify of any errors / warnings
+    com.check_deps(providers, opts.hide_warnings)
 	if opts.visual_mode then
 		local selection = util.get_visual_selection()
 		chat_window.build_and_mount(providers, selection)
