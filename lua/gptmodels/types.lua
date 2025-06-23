@@ -54,6 +54,7 @@
 
 ---@class LlmProvider
 ---@field name string
+---@field check_deps fun(): { INFO: string | nil, ERROR: string | nil }
 ---@field generate fun(args: MakeGenerateRequestArgs): Job
 ---@field chat fun(args: MakeChatRequestArgs): Job
 ---@field fetch_models fun(cb: fun(err: string | nil, models: string[] | nil)): Job

@@ -414,7 +414,7 @@ function M.build_and_mount(providers, selection)
 	vim.wo[input.winid].wrap = true
 
 	-- Notify of any errors / warnings
-	for level, message in pairs(com.check_deps()) do
+	for level, message in pairs(com.check_deps(providers)) do
 		if #message > 0 then
 			vim.notify_once(message, vim.log.levels[level])
 		end

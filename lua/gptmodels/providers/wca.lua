@@ -87,138 +87,138 @@ end
 
 ---@type LlmProvider
 local provider = {
-  name = "wca",
+    name = "wca",
+    check_deps = function()
+    end,
+    -- TODO actually fetch models.
+    -- There is no api available for this atm.
+    fetch_models = function(cb)
+        cb(nil, { "wca_model" })
+        return {}
+    end,
+    generate = function(args)
+        -- Like openai, wca expects only messages.
+        ---@type LlmMessage[]
+        ---@diagnostic disable-next-line: inject-field
+        args.llm.messages = {
+            { role = "user", content = args.llm.prompt },
+        }
 
-  -- TODO actually fetch models.
-  -- There is no api available for this atm.
-  fetch_models = function(cb)
-    cb(nil, { "wca_model" })
-    return {}
-  end,
-
-  generate = function(args)
-    -- Like openai, wca expects only messages.
-    ---@type LlmMessage[]
-    ---@diagnostic disable-next-line: inject-field
-    args.llm.messages = {
-      { role = "user", content = args.llm.prompt },
-    }
-
-    for _, system_string in ipairs(args.llm.system or {}) do
-      table.insert(args.llm.messages, {
-        role = "system",
-        content = system_string,
-      })
-    end
-
-    args.llm.prompt = nil
-    args.llm.system = nil
-
-    local access_token = generate_access_token()
-
-    -- curl --request POST \
-    --   --url <REDACTED> \
-    --   --header 'Authorization: Bearer <access_token>' \
-    --   --header 'Request-ID: 9bdb1d8c-3a6b-428c-a9a0-204c5164ea1a' \
-    --   --header 'content-type: multipart/form-data' \
-    --   --form message="$(cat rest_api/simple_chat.json | base64)"
-    local job = cmd.exec({
-      cmd = "curl",
-      args = {
-        "--request",
-        "POST",
-        "--url",
-        generate_wca_api_call(),
-        "-H",
-        "Content-Type: multipart/form-data",
-        "-H",
-        "Authorization: Bearer " .. access_token.access_token,
-        "--no-buffer",
-        "--no-progress-meter",
-        "--form",
-        "message=" .. format_user_messages(args.llm),
-      },
-      onread = vim.schedule_wrap(function(err, response)
-        if err then
-          return args.on_read(err, nil)
-        end
-        if not response then
-          return
+        for _, system_string in ipairs(args.llm.system or {}) do
+            table.insert(args.llm.messages, {
+                role = "system",
+                content = system_string,
+            })
         end
 
-        local status_ok, decoded_data = pcall(vim.fn.json_decode, response)
-        if not status_ok or not decoded_data then
-          -- TODO How to deal with errors?
-          vim.notify("error occurred: " .. response, vim.log.levels.ERROR)
-          return
-        end
+        args.llm.prompt = nil
+        args.llm.system = nil
 
-        args.on_read(nil, decoded_data.response.message.content)
-      end),
+        local access_token = generate_access_token()
 
-      -- TODO Test that this doesn't throw when on_end isn't passed in
-      onexit = vim.schedule_wrap(function()
-        if args.on_end then
-          args.on_end()
-        end
-      end),
-    })
-    return job
-  end,
+        -- curl --request POST \
+        --   --url <REDACTED> \
+        --   --header 'Authorization: Bearer <access_token>' \
+        --   --header 'Request-ID: 9bdb1d8c-3a6b-428c-a9a0-204c5164ea1a' \
+        --   --header 'content-type: multipart/form-data' \
+        --   --form message="$(cat rest_api/simple_chat.json | base64)"
+        local job = cmd.exec({
+            cmd = "curl",
+            args = {
+                "--request",
+                "POST",
+                "--url",
+                generate_wca_api_call(),
+                "-H",
+                "Content-Type: multipart/form-data",
+                "-H",
+                "Authorization: Bearer " .. access_token.access_token,
+                "--no-buffer",
+                "--no-progress-meter",
+                "--form",
+                "message=" .. format_user_messages(args.llm),
+            },
+            onread = vim.schedule_wrap(function(err, response)
+                if err then
+                    return args.on_read(err, nil)
+                end
+                if not response then
+                    return
+                end
 
-  chat = function(args)
-    local access_token = generate_access_token()
-    -- curl --request POST \
-    --   --url <REDACTED> \
-    --   --header 'Authorization: Bearer <access_token>' \
-    --   --header 'Request-ID: 9bdb1d8c-3a6b-428c-a9a0-204c5164ea1a' \
-    --   --header 'content-type: multipart/form-data' \
-    --   --form message="$(cat rest_api/simple_chat.json | base64)"
-    local job = cmd.exec({
-      cmd = "curl",
-      args = {
-        "--request",
-        "POST",
-        "--url",
-        generate_wca_api_call(),
-        "-H",
-        "Content-Type: multipart/form-data",
-        "-H",
-        "Authorization: Bearer " .. access_token.access_token,
-        "--no-buffer",
-        "--no-progress-meter",
-        "--form",
-        "message=" .. format_user_messages(args.llm),
-      },
-      onread = vim.schedule_wrap(function(err, response)
-        if err then
-          return args.on_read(err, nil)
-        end
-        if not response then
-          return
-        end
+                local status_ok, decoded_data = pcall(vim.fn.json_decode, response)
+                if not status_ok or not decoded_data then
+                    -- TODO How to deal with errors?
+                    vim.notify("error occurred: " .. response, vim.log.levels.ERROR)
+                    return
+                end
 
-        local status_ok, decoded_data = pcall(vim.fn.json_decode, response)
-        if not status_ok or not decoded_data then
-          vim.notify("error occurred: " .. response, vim.log.levels.ERROR)
-          return
-        end
+                args.on_read(nil, decoded_data.response.message.content)
+            end),
 
-        args.on_read(nil, {
-          role = decoded_data.response.message.role,
-          content = decoded_data.response.message.content,
+            -- TODO Test that this doesn't throw when on_end isn't passed in
+            onexit = vim.schedule_wrap(function()
+                if args.on_end then
+                    args.on_end()
+                end
+            end),
         })
-      end),
+        return job
+    end,
 
-      -- TODO Test that this doesn't throw when on_end isn't passed in
-      onexit = vim.schedule_wrap(function()
-        if args.on_end then
-          args.on_end()
-        end
-      end),
-    })
-    return job
-  end,
+    chat = function(args)
+        local access_token = generate_access_token()
+        -- curl --request POST \
+        --   --url <REDACTED> \
+        --   --header 'Authorization: Bearer <access_token>' \
+        --   --header 'Request-ID: 9bdb1d8c-3a6b-428c-a9a0-204c5164ea1a' \
+        --   --header 'content-type: multipart/form-data' \
+        --   --form message="$(cat rest_api/simple_chat.json | base64)"
+        local job = cmd.exec({
+            cmd = "curl",
+            args = {
+                "--request",
+                "POST",
+                "--url",
+                generate_wca_api_call(),
+                "-H",
+                "Content-Type: multipart/form-data",
+                "-H",
+                "Authorization: Bearer " .. access_token.access_token,
+                "--no-buffer",
+                "--no-progress-meter",
+                "--form",
+                "message=" .. format_user_messages(args.llm),
+            },
+            onread = vim.schedule_wrap(function(err, response)
+                if err then
+                    return args.on_read(err, nil)
+                end
+                if not response then
+                    return
+                end
+
+                local status_ok, decoded_data = pcall(vim.fn.json_decode, response)
+                if not status_ok or not decoded_data then
+                    vim.notify("error occurred: " .. response, vim.log.levels.ERROR)
+                    return
+                end
+
+                args.on_read(nil, {
+                    role = decoded_data.response.message.role,
+                    content = decoded_data.response.message.content,
+                })
+            end),
+
+            -- TODO Test that this doesn't throw when on_end isn't passed in
+            onexit = vim.schedule_wrap(function()
+                if args.on_end then
+                    args.on_end()
+                end
+            end),
+        })
+        return job
+    end,
 }
 
 return provider

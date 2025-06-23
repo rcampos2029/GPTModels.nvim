@@ -1,11 +1,12 @@
 local cmd = require("gptmodels.cmd")
+local util = require("gptmodels.util")
 
 local _ENVVARS = {
     api_key = "ANTHROPIC_API_KEY"
 }
 
 local _HEADERS = {
-    api_key           = "x-api-key: " .. os.getenv(_ENVVARS.api_key),
+    api_key           = "x-api-key: " .. (os.getenv(_ENVVARS.api_key) or ""),
     anthropic_version = "anthropic-version: 2023-06-01",
 }
 
@@ -46,7 +47,14 @@ local helpers = {
 ---@type LlmProvider
 local provider = {
     name = "anthropic",
-
+    check_deps = function()
+        if not util.has_env_var(_ENVVARS.api_key) then
+            return {
+                INFO = "GPTModels.nvim is missing optional " .. _ENVVARS.api_key .. " env var." ..
+                    "Anthropic models will be unavailable.",
+            }
+        end
+    end,
     fetch_models = function(cb)
         local response_aggregate = ""
         local job = cmd.exec({

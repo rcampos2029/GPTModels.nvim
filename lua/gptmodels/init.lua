@@ -14,7 +14,6 @@ M.setup = function(args)
 	M.config = vim.tbl_deep_extend("force", M.config, args or {})
 end
 
-print(anthropic.name)
 local providers = { "ollama", "openai", "wca", anthropic.name }
 
 ---@param opts { visual_mode: boolean }
