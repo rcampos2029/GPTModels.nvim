@@ -2,6 +2,8 @@ local util = require("gptmodels.util")
 local code_window = require("gptmodels.windows.code")
 local chat_window = require("gptmodels.windows.chat")
 
+local anthropic = require("gptmodels.providers.anthropic")
+
 local M = {}
 
 -- you can define your setup function here. Usually configurations can be merged, accepting outside params and
@@ -12,7 +14,8 @@ M.setup = function(args)
 	M.config = vim.tbl_deep_extend("force", M.config, args or {})
 end
 
-local providers = { "ollama", "openai", "wca" }
+print(anthropic.name)
+local providers = { "ollama", "openai", "wca", anthropic.name }
 
 ---@param opts { visual_mode: boolean }
 ---@see file plugin/init.lua

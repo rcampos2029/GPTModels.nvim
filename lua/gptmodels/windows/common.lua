@@ -86,6 +86,7 @@ end
 -- Check for required programs, warn user if they're not there
 -- *NOTE*: the keys in the returned table must be one of vim.log.levels
 -- TODO remove hard-coded values
+-- TODO check for anthropic
 ---@return { INFO: string | nil, ERROR: string | nil }
 function M.check_deps()
 	local has_curl = true
