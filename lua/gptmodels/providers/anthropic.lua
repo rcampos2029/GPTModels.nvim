@@ -50,7 +50,7 @@ local provider = {
     check_deps = function()
         if not util.has_env_var(_ENVVARS.api_key) then
             return {
-                INFO = "GPTModels.nvim is missing optional " .. _ENVVARS.api_key .. " env var." ..
+                INFO = "GPTModels.nvim is missing optional " .. _ENVVARS.api_key .. " env var. " ..
                     "Anthropic models will be unavailable.",
             }
         end
