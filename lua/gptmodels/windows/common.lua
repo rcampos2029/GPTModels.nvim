@@ -84,12 +84,8 @@ function M.safe_render_buffer_from_lines(bufnr, lines)
 end
 
 -- Check for required programs, warn user if they're not there
--- *NOTE*: the keys in the returned table must be one of vim.log.levels
----@return { INFO: string | nil, ERROR: string | nil }
 function M.check_deps(providers)
     local has_curl = true
-    local error_string = ""
-    local info_string = ""
     cmd.exec({
         sync = true,
         cmd = "which",
@@ -102,20 +98,18 @@ function M.check_deps(providers)
         testid = "check-deps-errors",
     })
     if not has_curl then
-        error_string = error_string .. "GPTModels.nvim is missing `curl`, which is required. The plugin will not work. "
+			vim.notify_once(
+        "GPTModels.nvim is missing `curl`, which is required. The plugin will not work. ",
+                vim.log.levels["ERROR"])
     end
 
     for _, provider_name in ipairs(providers) do
-        local check = require("gptmodels.providers." .. provider_name).check_deps()
-        if check ~= nil then
-        info_string = info_string .. (check.INFO and check.INFO or "")
-        error_string = error_string .. (check.ERROR and check.ERROR or "")
+        for level, message in pairs(require("gptmodels.providers." .. provider_name).check_deps() or {}) do
+		if #message > 0 then
+			vim.notify_once(message, vim.log.levels[level])
+		end
         end
-    end
-    return {
-        ERROR = error_string and error_string or nil,
-        INFO = info_string and info_string or nil,
-    }
+	end
 end
 
 -- Scroll to the bottom of a given window/buffer pair.
