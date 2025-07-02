@@ -3,6 +3,7 @@ local code_window = require("gptmodels.windows.code")
 local chat_window = require("gptmodels.windows.chat")
 
 local anthropic = require("gptmodels.providers.anthropic")
+local google = require("gptmodels.providers.google")
 
 local M = {}
 
@@ -14,7 +15,7 @@ M.setup = function(args)
 	M.config = vim.tbl_deep_extend("force", M.config, args or {})
 end
 
-local providers = { "ollama", "openai", "wca", anthropic.name }
+local providers = { "ollama", "openai", "wca", anthropic.name, google.name }
 
 ---@param opts { visual_mode: boolean }
 ---@see file plugin/init.lua

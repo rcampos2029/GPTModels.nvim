@@ -2,6 +2,7 @@
 ---| "user"
 ---| "assistant"
 ---| "system"
+---| "model"
 
 ---@class LlmMessage
 ---@field role Role
